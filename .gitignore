@@ -1,0 +1,10 @@
+.idea
+db.sqlite3
+*.pyc
+__pycache__
+backup
+build
+dist
+lib
+scripts
+.git
