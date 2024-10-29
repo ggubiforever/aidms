@@ -828,8 +828,9 @@ def send_manual_mails():
                     ii = ii.replace("]", "'")
                     bodys = bodys + ii + '\n'
                 reg = r'^[a-zA-Z0-9+-_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
+                mailadd = re.sub(r'[가-힣> <]*','',res[i][1])
                 p = re.compile(reg)
-                m = p.search(res[i][1])
+                m = p.search(mailadd)
                 if m:
                     mailto = m.group()
                 else:
@@ -924,13 +925,13 @@ now = datetime.strftime(now,'%H%M%S')
 
 ### 통관 데이타 가저오기
 now_ms = now[2:]
-if now_ms >= '1000' and now_ms <= '1500': # 10분에서 20분 사이는 가지고 오지 않는다.
-    pass
-else:
-    for i in range(3):
-        cust_cd = get_cust(i)
-        getdata_class = import_bl.get_DataFromNcustoms()
-        getdata_class.query(cust_cd,i)
+#if now_ms >= '1000' and now_ms <= '1500': # 10분에서 20분 사이는 가지고 오지 않는다.
+#    pass
+#else:
+for i in range(3):
+    cust_cd = get_cust(i)
+    getdata_class = import_bl.get_DataFromNcustoms()
+    getdata_class.query(cust_cd,i)
 
 ### 관세청 수입화물 진행정보 API call 대상 취합
 conn = connectDb.connect_Db2()
@@ -949,9 +950,8 @@ if res:
     now = datetime.strftime(now, '%H%M%S')
     bl = list(res)
     if now < '190000':
-        now_ms = now[2:]
-        if now_ms >= '1000' and now_ms <= '5200':
-
+        now_ms = now[:2]
+        if now_ms in ['09','10','11','12','13','14','15','16','17','18']:
             get_api = api_call.getInfo_api_importCargo()
             lst = get_api.tracking_importCargo1(bl)
 
