@@ -151,6 +151,30 @@ class api_For_Worksmobile():
         self.send_mail(mails)
 
 
+
+    def send_mail_alert_impo_api(self,fails):
+        if len(fails) == 0:
+            return
+        mrn_txt = ''
+        for f in fails:
+            mrn_txt = mrn_txt + f[0] + '**' + f[1] + ' '
+        mails = {'to': 'jnoo74@gmail.com', 'cc': '', 'bcc': '', 'userName': '',
+                 'subject': 'T&M 수입화물정보 업데이트 오류',
+                 'body': mrn_txt +  " 갱신 실패 -- 수동 갱신필요",
+                 'contentType': 'text'}
+        self.send_mail(mails)
+
+
+
+    def send_mail_alert_impo_api2(self):
+
+        mails = {'to': 'jnoo74@gmail.com', 'cc': '', 'bcc': '', 'userName': '',
+                 'subject': 'T&M fail',
+                 'body':'T&M 실행중 오류가 발생하엿습니다.  확인이 필요합니다.',
+                 'contentType': 'text'}
+        self.send_mail(mails)
+
+
 ###희래(주) 수입신고 후 25일이상 수리되지 않을때 리마인드 메일 발송
 import connectDb
 from datetime import datetime, timedelta
@@ -286,6 +310,7 @@ def apiinfo_update_tnm(updaters):
     tstr = ','.join(cols)
     conn = connectDb.connect_Db2()
     curs = conn.cursor()
+    fails = []
     for x in range(len(updaters)):
         xlst = list(updaters[x])
         if len(xlst) == 1:
@@ -351,16 +376,24 @@ def apiinfo_update_tnm(updaters):
             curs.execute(sql_update_freetime)
             conn.commit()
         except:
-            txts = xlst[6][:15]
-            xlst[6] = txts.replace("'","")
-            sql = """insert into samc_cts.dbo.tnm_submst ({}) values {}""".format(tstr, tuple(xlst))
-            curs.execute(sql)
-            sql_update_freetime = """update samc_cts.dbo.tnm_submst 
-                                            set dem_ft = a.dem_ft, det_ft = a.det_ft, sto_ft = a.sto_ft 
-                                            from samc_cts.dbo.tnm_master a 
-                                            where samc_cts.dbo.tnm_submst.tnm_key = a.tnm_key and a.tnm_key = '{}'""".format(tnm_key)
-            curs.execute(sql_update_freetime)
-            conn.commit()
+            try:
+                txts = xlst[6][:15]
+                xlst[6] = txts.replace("'","")
+                sql = """insert into samc_cts.dbo.tnm_submst ({}) values {}""".format(tstr, tuple(xlst))
+                curs.execute(sql)
+                sql_update_freetime = """update samc_cts.dbo.tnm_submst 
+                                                set dem_ft = a.dem_ft, det_ft = a.det_ft, sto_ft = a.sto_ft 
+                                                from samc_cts.dbo.tnm_master a 
+                                                where samc_cts.dbo.tnm_submst.tnm_key = a.tnm_key and a.tnm_key = '{}'""".format(tnm_key)
+                curs.execute(sql_update_freetime)
+                conn.commit()
+            except:
+                print(xlst)
+                mrn = xlst[1]
+                bl = xlst[-2]
+                temp = [mrn,bl]
+                fails.append(temp)
+
 
         sql = """update samc_cts.dbo.tnm_master set sub_yn = 'Y' where tnm_key = '{}'""".format(tnm_key)
         curs.execute(sql)
@@ -379,6 +412,8 @@ def apiinfo_update_tnm(updaters):
             curs.execute(sql)
             conn.commit()
     conn.close()
+    a = api_For_Worksmobile()
+    a.send_mail_alert_impo_api(fails)
 
 def update_singos(singos,tnm_key):
     conn = connectDb.connect_Db2()
@@ -952,17 +987,20 @@ if res:
     if now < '190000':
         now_ms = now[:2]
         if now_ms in ['09','10','11','12','13','14','15','16','17','18']:
-            get_api = api_call.getInfo_api_importCargo()
-            lst = get_api.tracking_importCargo1(bl)
+            try:
+                get_api = api_call.getInfo_api_importCargo()
+                lst = get_api.tracking_importCargo1(bl)
 
-            ### API  수신 정보 update. --보세구역, 반출입 일자 , 중량, 화물관리번호등.....
-            print('수입화물진행정보 업데이트')
-            apiinfo_update_tnm(lst)
-            ### 컨테이너 정보 확인 #####
-            print('컨테이너 정보 확인')
-            chk_cntr_inf()
-            ### 2023-01-16 --> 분할 수입신고건의 경우(BL분할 아님) 첫번째 신고건이 수리되었을 경우 두번째 신고건에 대한 신고지연 가산세 안내 메일 발송되지 않는 문제 있음.
-
+                ### API  수신 정보 update. --보세구역, 반출입 일자 , 중량, 화물관리번호등.....
+                print('수입화물진행정보 업데이트')
+                apiinfo_update_tnm(lst)
+                ### 컨테이너 정보 확인 #####
+                print('컨테이너 정보 확인')
+                chk_cntr_inf()
+                ### 2023-01-16 --> 분할 수입신고건의 경우(BL분할 아님) 첫번째 신고건이 수리되었을 경우 두번째 신고건에 대한 신고지연 가산세 안내 메일 발송되지 않는 문제 있음.
+            except:
+                a = api_For_Worksmobile()
+                a.send_mail_alert_impo_api2()
 ### Freetime 자동 기재
 update_freetime() ### 보류.....
 
