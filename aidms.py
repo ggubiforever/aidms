@@ -986,21 +986,21 @@ if res:
     bl = list(res)
     if now < '190000':
         now_ms = now[:2]
-        if now_ms in ['09','10','11','12','13','14','15','16','17','18']:
-            try:
-                get_api = api_call.getInfo_api_importCargo()
-                lst = get_api.tracking_importCargo1(bl)
+        # if now_ms in ['09','10','11','12','13','14','15','16','17','18']:
+        try:
+            get_api = api_call.getInfo_api_importCargo()
+            lst = get_api.tracking_importCargo1(bl)
 
-                ### API  수신 정보 update. --보세구역, 반출입 일자 , 중량, 화물관리번호등.....
-                print('수입화물진행정보 업데이트')
-                apiinfo_update_tnm(lst)
-                ### 컨테이너 정보 확인 #####
-                print('컨테이너 정보 확인')
-                chk_cntr_inf()
-                ### 2023-01-16 --> 분할 수입신고건의 경우(BL분할 아님) 첫번째 신고건이 수리되었을 경우 두번째 신고건에 대한 신고지연 가산세 안내 메일 발송되지 않는 문제 있음.
-            except:
-                a = api_For_Worksmobile()
-                a.send_mail_alert_impo_api2()
+            ### API  수신 정보 update. --보세구역, 반출입 일자 , 중량, 화물관리번호등.....
+            print('수입화물진행정보 업데이트')
+            apiinfo_update_tnm(lst)
+            ### 컨테이너 정보 확인 #####
+            print('컨테이너 정보 확인')
+            chk_cntr_inf()
+            ### 2023-01-16 --> 분할 수입신고건의 경우(BL분할 아님) 첫번째 신고건이 수리되었을 경우 두번째 신고건에 대한 신고지연 가산세 안내 메일 발송되지 않는 문제 있음.
+        except:
+            a = api_For_Worksmobile()
+            a.send_mail_alert_impo_api2()
 ### Freetime 자동 기재
 update_freetime() ### 보류.....
 
