@@ -191,7 +191,7 @@ class HEE_LAE_remind_mails():
                 elif i == 1:
                     conn = connectDb.connect_Db2()
                     db_name = """ ncustoms.dbo.impo1"""
-                sql = """select impo_singo_no,impo_singo_date,impo_bl_no from {} where impo_napse_sangho = '희래(주)' and impo_ok_date = ''""".format(db_name)
+                sql = """select impo_singo_no,impo_singo_date,impo_bl_no from {} where impo_napse_sangho = '희래(주)' and impo_receive_result not in ('자수','수리','취하')""".format(db_name)
                 curs = conn.cursor()
                 curs.execute(sql)
                 res = curs.fetchall()
@@ -1009,7 +1009,7 @@ update_freetime() ### 보류.....
 for i in range(3):
     napbu_gihan_update(i)
 
-if now > '090000' and now < '091000':
+if now > '090000' and now < '191000':
     heelae = HEE_LAE_remind_mails()
     heelae.begin()
 
