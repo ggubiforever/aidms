@@ -166,11 +166,11 @@ class api_For_Worksmobile():
 
 
 
-    def send_mail_alert_impo_api2(self):
+    def send_mail_alert_impo_api2(self,errors):
 
         mails = {'to': 'jnoo74@gmail.com', 'cc': '', 'bcc': '', 'userName': '',
                  'subject': 'T&M fail',
-                 'body':'T&M 실행중 오류가 발생하엿습니다.  확인이 필요합니다.',
+                 'body':'T&M 실행중 오류가 발생하엿습니다.  확인이 필요합니다.' + errors,
                  'contentType': 'text'}
         self.send_mail(mails)
 
@@ -315,102 +315,105 @@ def apiinfo_update_tnm(updaters):
         xlst = list(updaters[x])
         if len(xlst) == 1:
             continue
-        tnm_key = xlst[-3]
-        if len(xlst[13]) > 1:
-            addtext = "외" + str(len(xlst[13]) - 1)
-            update_singos(xlst[13], tnm_key)
-            xlst[13] = xlst[13][0][0]
-        elif len(xlst[13]) ==  1:
-            addtext = ''
-            update_singos(xlst[13], tnm_key)
-            xlst[13] = xlst[13][0][0]
-        else:
-            addtext = ''
-            xlst[13] = ''
-        del xlst[-1]
-
-        ########통관시스템에 없는 건은 업데이트 진행하지 않음
-
-        mrn = xlst[1]
-        area = xlst[-1]
-        dbs = ['ncustoms.kcba.impo1','ncustoms.dbo.impo1']
-        if area == '01':
-            con = connectDb.connect_Db()
-            i = 0
-        else:
-            con = connectDb.connect_Db2()
-            i = 1
-        curs2 = con.cursor()
-        sql_check = """select impo_mrn_no from {} where impo_mrn_no = '{}'""".format(dbs[i],mrn)
-        curs2.execute(sql_check)
-        res = curs2.fetchall()
-        con.close()
-       # if not res:
-       #     continue
-
         try:
-            sql = """update samc_cts.dbo.tnm_master set ata = %s, mrn = %s, gweight = %s,gw_unit = %s, ctns = %s, ctns_unit = %s, pum_name = %s, iphng_banip_storage_cd = %s,
-             iphng_banip_storage = %s, iphng_banip_date = %s, trans_banip_storage_cd = %s, trans_banip_storage = %s, trans_banip_date = %s,
-             impo_singo_no = %s, impo_ok_date = %s,vo_company = %s, import_declaration_gihan = %s,iphng_jangchi_gihan = %s, 
-             banchul_gihan = %s, update_cargo_complete = %s, impo_singo_date = %s,banchul_delay_gihan = %s, last_banchul_date = %s, rmn_qty = %s, rmn_weight = %s,
-              tot_banchul_qty = %s, tot_banchul_weight = %s,stat = %s,import_delay_gasan = %s,spp_stat = %s,depart_cd = %s, depart_name = %s, 
-              singono_addtext = '{}' where tnm_key = %s and area = %s""".format(
-                addtext) # # 2022-11-08 depart_cd, depart_name 추가
-            curs.execute(sql, tuple(xlst))
-            conn.commit()
-        except:
-            print(x)
-            print(sql)
-            print(updaters[x])
+            tnm_key = xlst[-3]
+            if len(xlst[13]) > 1:
+                addtext = "외" + str(len(xlst[13]) - 1)
+                update_singos(xlst[13], tnm_key)
+                xlst[13] = xlst[13][0][0]
+            elif len(xlst[13]) ==  1:
+                addtext = ''
+                update_singos(xlst[13], tnm_key)
+                xlst[13] = xlst[13][0][0]
+            else:
+                addtext = ''
+                xlst[13] = ''
+            del xlst[-1]
 
-        tnm_key = xlst[32]
-        sql = """delete from samc_cts.dbo.tnm_submst where tnm_key = '{}' and mrn = '{}'""".format(tnm_key,mrn)
-        curs.execute(sql)
-        try:
-            sql = """insert into samc_cts.dbo.tnm_submst ({}) values {}""".format(tstr,tuple(xlst))
-            curs.execute(sql)
-            sql_update_freetime = """update samc_cts.dbo.tnm_submst 
-                                set dem_ft = a.dem_ft, det_ft = a.det_ft, sto_ft = a.sto_ft 
-                                from samc_cts.dbo.tnm_master a 
-                                where samc_cts.dbo.tnm_submst.tnm_key = a.tnm_key and a.tnm_key = '{}'""".format(tnm_key)
-            curs.execute(sql_update_freetime)
-            conn.commit()
-        except:
+            ########통관시스템에 없는 건은 업데이트 진행하지 않음
+
+            mrn = xlst[1]
+            area = xlst[-1]
+            dbs = ['ncustoms.kcba.impo1','ncustoms.dbo.impo1']
+            if area == '01':
+                con = connectDb.connect_Db()
+                i = 0
+            else:
+                con = connectDb.connect_Db2()
+                i = 1
+            curs2 = con.cursor()
+            sql_check = """select impo_mrn_no from {} where impo_mrn_no = '{}'""".format(dbs[i],mrn)
+            curs2.execute(sql_check)
+            res = curs2.fetchall()
+            con.close()
+           # if not res:
+           #     continue
+
             try:
-                txts = xlst[6][:15]
-                xlst[6] = txts.replace("'","")
-                sql = """insert into samc_cts.dbo.tnm_submst ({}) values {}""".format(tstr, tuple(xlst))
+                sql = """update samc_cts.dbo.tnm_master set ata = %s, mrn = %s, gweight = %s,gw_unit = %s, ctns = %s, ctns_unit = %s, pum_name = %s, iphng_banip_storage_cd = %s,
+                 iphng_banip_storage = %s, iphng_banip_date = %s, trans_banip_storage_cd = %s, trans_banip_storage = %s, trans_banip_date = %s,
+                 impo_singo_no = %s, impo_ok_date = %s,vo_company = %s, import_declaration_gihan = %s,iphng_jangchi_gihan = %s, 
+                 banchul_gihan = %s, update_cargo_complete = %s, impo_singo_date = %s,banchul_delay_gihan = %s, last_banchul_date = %s, rmn_qty = %s, rmn_weight = %s,
+                  tot_banchul_qty = %s, tot_banchul_weight = %s,stat = %s,import_delay_gasan = %s,spp_stat = %s,depart_cd = %s, depart_name = %s, 
+                  singono_addtext = '{}' where tnm_key = %s and area = %s""".format(
+                    addtext) # # 2022-11-08 depart_cd, depart_name 추가
+                curs.execute(sql, tuple(xlst))
+                conn.commit()
+            except:
+                print(x)
+                print(sql)
+                print(updaters[x])
+
+            tnm_key = xlst[32]
+            sql = """delete from samc_cts.dbo.tnm_submst where tnm_key = '{}' and mrn = '{}'""".format(tnm_key,mrn)
+            curs.execute(sql)
+            try:
+                sql = """insert into samc_cts.dbo.tnm_submst ({}) values {}""".format(tstr,tuple(xlst))
                 curs.execute(sql)
                 sql_update_freetime = """update samc_cts.dbo.tnm_submst 
-                                                set dem_ft = a.dem_ft, det_ft = a.det_ft, sto_ft = a.sto_ft 
-                                                from samc_cts.dbo.tnm_master a 
-                                                where samc_cts.dbo.tnm_submst.tnm_key = a.tnm_key and a.tnm_key = '{}'""".format(tnm_key)
+                                    set dem_ft = a.dem_ft, det_ft = a.det_ft, sto_ft = a.sto_ft 
+                                    from samc_cts.dbo.tnm_master a 
+                                    where samc_cts.dbo.tnm_submst.tnm_key = a.tnm_key and a.tnm_key = '{}'""".format(tnm_key)
                 curs.execute(sql_update_freetime)
                 conn.commit()
             except:
-                print(xlst)
-                mrn = xlst[1]
-                bl = xlst[-2]
-                temp = [mrn,bl]
-                fails.append(temp)
+                try:
+                    txts = xlst[6][:15]
+                    xlst[6] = txts.replace("'","")
+                    sql = """insert into samc_cts.dbo.tnm_submst ({}) values {}""".format(tstr, tuple(xlst))
+                    curs.execute(sql)
+                    sql_update_freetime = """update samc_cts.dbo.tnm_submst 
+                                                    set dem_ft = a.dem_ft, det_ft = a.det_ft, sto_ft = a.sto_ft 
+                                                    from samc_cts.dbo.tnm_master a 
+                                                    where samc_cts.dbo.tnm_submst.tnm_key = a.tnm_key and a.tnm_key = '{}'""".format(tnm_key)
+                    curs.execute(sql_update_freetime)
+                    conn.commit()
+                except:
+                    print(xlst)
+                    mrn = xlst[1]
+                    bl = xlst[-2]
+                    temp = [mrn,bl]
+                    fails.append(temp)
 
 
-        sql = """update samc_cts.dbo.tnm_master set sub_yn = 'Y' where tnm_key = '{}'""".format(tnm_key)
-        curs.execute(sql)
+            sql = """update samc_cts.dbo.tnm_master set sub_yn = 'Y' where tnm_key = '{}'""".format(tnm_key)
+            curs.execute(sql)
 
-        if xlst[14] != '' and xlst[27] == '반출완료':
-            sql = """update samc_cts.dbo.tnm_submst set update_cargo_complete = 'Y' where tnm_key = '{}'""".format(tnm_key) # api 에서 반출완료된 경우 update_cargo_complete (tnm_submst)완료처리 함.(화물관리번호  두개 이상일때 문제 있음)
-        else:
-            sql = """update samc_cts.dbo.tnm_submst set update_cargo_complete = 'N' where tnm_key = '{}'""".format(tnm_key)
-        curs.execute(sql)
-        conn.commit()
-        sql = """select tnm_key from samc_cts.dbo.tnm_submst where tnm_key = '{}' and update_cargo_complete != 'Y'""".format(tnm_key) #
-        curs.execute(sql)
-        res = curs.fetchall()
-        if len(res) == 0: #submst 에 있는 MRN 에 최종 반출완료되지 않은 화물이 하나라도 있는경우 해당 bL역시 최종반출처리 되지 아니한다.--2023-05-09
-            sql = """update samc_cts.dbo.tnm_master set update_cargo_complete = 'Y' where tnm_key = '{}'""".format(tnm_key)
+            if xlst[14] != '' and xlst[27] == '반출완료':
+                sql = """update samc_cts.dbo.tnm_submst set update_cargo_complete = 'Y' where tnm_key = '{}'""".format(tnm_key) # api 에서 반출완료된 경우 update_cargo_complete (tnm_submst)완료처리 함.(화물관리번호  두개 이상일때 문제 있음)
+            else:
+                sql = """update samc_cts.dbo.tnm_submst set update_cargo_complete = 'N' where tnm_key = '{}'""".format(tnm_key)
             curs.execute(sql)
             conn.commit()
+            sql = """select tnm_key from samc_cts.dbo.tnm_submst where tnm_key = '{}' and update_cargo_complete != 'Y'""".format(tnm_key) #
+            curs.execute(sql)
+            res = curs.fetchall()
+            if len(res) == 0: #submst 에 있는 MRN 에 최종 반출완료되지 않은 화물이 하나라도 있는경우 해당 bL역시 최종반출처리 되지 아니한다.--2023-05-09
+                sql = """update samc_cts.dbo.tnm_master set update_cargo_complete = 'Y' where tnm_key = '{}'""".format(tnm_key)
+                curs.execute(sql)
+                conn.commit()
+        except:
+            pass
     conn.close()
     a = api_For_Worksmobile()
     a.send_mail_alert_impo_api(fails)
@@ -990,17 +993,36 @@ if res:
         try:
             get_api = api_call.getInfo_api_importCargo()
             lst = get_api.tracking_importCargo1(bl)
+            fails = get_api.fails
 
             ### API  수신 정보 update. --보세구역, 반출입 일자 , 중량, 화물관리번호등.....
             print('수입화물진행정보 업데이트')
             apiinfo_update_tnm(lst)
             ### 컨테이너 정보 확인 #####
-            print('컨테이너 정보 확인')
-            chk_cntr_inf()
+            try:
+                print('컨테이너 정보 확인')
+                chk_cntr_inf()
+            except:
+                pass
             ### 2023-01-16 --> 분할 수입신고건의 경우(BL분할 아님) 첫번째 신고건이 수리되었을 경우 두번째 신고건에 대한 신고지연 가산세 안내 메일 발송되지 않는 문제 있음.
         except:
             a = api_For_Worksmobile()
-            a.send_mail_alert_impo_api2()
+            a.send_mail_alert_impo_api2('')
+        if len(fails) > 0:
+            err_bl = ''
+            for bl in fails:
+                if bl[0] != '' and bl[1] == '':
+                    err_bl = err_bl + bl[0] + ' '
+                elif bl[0] == '' and bl[1] != '':
+                    err_bl = err_bl + bl[1] + ' '
+                elif bl[0] != '' and bl[1] != '':
+                    err_bl = err_bl + bl[0] + '&' + bl[1] + ' '
+                else:
+                    err_bl = err_bl + 'N/A' + ' '
+
+
+            a = api_For_Worksmobile()
+            a.send_mail_alert_impo_api2(err_bl)
 ### Freetime 자동 기재
 update_freetime() ### 보류.....
 
